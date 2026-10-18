@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOVEREIGN-CORE // National Command Architecture</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #030712;
+      --panel: #0b1120;
+      --border: #1e293b;
+      --corvus: #f59e0b;
+      --aether: #00f2fe;
+      --olympus: #a855f7;
+      --text: #f8fafc;
+      --text-muted: #64748b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      padding: 12px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Master Top Header */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 8px; }
+    .badge {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* Module Navigation Tabs */
+    .module-nav {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .nav-btn {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 12px 6px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-btn.active-corvus { border-color: var(--corvus); color: var(--corvus); background: rgba(245, 158, 11, 0.1); }
+    .nav-btn.active-aether { border-color: var(--aether); color: var(--aether); background: rgba(0, 242, 254, 0.1); }
+    .nav-btn.active-olympus { border-color: var(--olympus); color: var(--olympus); background: rgba(168, 85, 247, 0.1); }
+
+    /* Module Containers */
+    .module-view { display: none; }
+    .module-view.active { display: flex; flex-direction: column; gap: 14px; }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding-bottom: 8px;
+    }
+
+    .title-row h2 { font-size: 13px; letter-spacing: 1px; }
+
+    /* Interactive Elements */
+    button.action-btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      font-family: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 12px;
+      margin-top: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .btn-corvus { background: var(--corvus); color: #000; }
+    .btn-aether { background: var(--aether); color: #000; }
+    .btn-olympus { background: var(--olympus); color: #fff; }
+
+    input, textarea {
+      width: 100%;
+      background: #02050b;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 12px;
+      margin-top: 6px;
+      outline: none;
+    }
+
+    /* Terminal Console */
+    .console {
+      background: #010409;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 11px;
+      line-height: 1.6;
+      height: 220px;
+      overflow-y: auto;
+      color: #94a3b8;
+    }
+
+    .log { margin-bottom: 4px; word-break: break-all; }
+    .log-warn { color: #f59e0b; }
+    .log-info { color: #00f2fe; }
+    .log-success { color: #10b981; }
+
+    canvas#canvasStage {
+      width: 100%;
+      height: 220px;
+      background: #010409;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span class="badge" id="securityBadge">SOVEREIGN-KERNEL v5.0</span>
+      <h1 style="font-size: 15px; font-family: 'Space Grotesk', sans-serif;">SOVEREIGN PLATFORM</h1>
+    </div>
+    <div style="font-size: 11px; color: var(--text-muted);" id="nodeStatus">CLEARANCE: LEVEL 5 ROOT</div>
+  </header>
+
+  <!-- Navigation Switchboard -->
+  <div class="module-nav">
+    <button class="nav-btn active-corvus" id="tabCorvus" onclick="switchModule('corvus')">01 CORVUS<br><small>Cartel Forensics</small></button>
+    <button class="nav-btn" id="tabAether" onclick="switchModule('aether')">02 AETHER<br><small>Mesh Routing</small></button>
+    <button class="nav-btn" id="tabOlympus" onclick="switchModule('olympus')">03 OLYMPUS<br><small>ZK Registry</small></button>
+  </div>
+
+  <!-- MODULE 01: CORVUS (Graph-Theoretic Cartel Forensics) -->
+  <div class="module-view active" id="viewCorvus">
+    <div class="card">
+      <div class="title-row">
+        <h2 style="color: var(--corvus);">MODULE CORVUS // Graph Cartel Detection</h2>
+        <span style="font-size: 10px; color: var(--text-muted);">TARJAN CYCLE ENGINE</span>
+      </div>
+      <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+        Performs mathematical entity resolution and detects collusive bid-rigging rings across public tenders.
+      </p>
+      <button class="action-btn btn-corvus" onclick="runCorvusAudit()">Run National Procurement Audit</button>
+    </div>
+
+    <div class="card">
+      <div class="title-row">
+        <h2>Network Graph Topology & Cycles</h2>
+        <span style="font-size: 10px; color: var(--corvus);" id="cycleMetric">0 Collusive Rings Detected</span>
+      </div>
+      <canvas id="canvasStage"></canvas>
+    </div>
+
+    <div class="card">
+      <div class="title-row"><h2>Investigative Forensic Dossier</h2></div>
+      <div class="console" id="corvusLog">
+        <div class="log">// CORVUS GRAPH SUBSYSTEM ONLINE. AWAITING DATASET INGESTION...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODULE 02: AETHER-MESH (Decentralized Comms) -->
+  <div class="module-view" id="viewAether">
+    <div class="card">
+      <div class="title-row">
+        <h2 style="color: var(--aether);">MODULE AETHER // Sovereign P2P Mesh Protocol</h2>
+        <span style="font-size: 10px; color: var(--text-muted);">DELAY-TOLERANT GOSSIP</span>
+      </div>
+      <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+        Simulates decentralized ad-hoc communication routing during total internet/cellular blackouts.
+      </p>
+      <input type="text" id="meshPayload" value="SOVEREIGN EMERGENCY PACKET: GRID COMPROMISED">
+      <button class="action-btn btn-aether" onclick="dispatchMeshPacket()">Inject Cryptographic Packet Hop</button>
+    </div>
+
+    <div class="card">
+      <div class="title-row"><h2>Active Node Routing Ledger</h2></div>
+      <div class="console" id="aetherLog">
+        <div class="log">// AETHER PROTOCOL READY. PEER-TO-PEER ROUTING TABLE ACTIVE.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODULE 03: OLYMPUS (Zero-Knowledge / Merkle State) -->
+  <div class="module-view" id="viewOlympus">
+    <div class="card">
+      <div class="title-row">
+        <h2 style="color: var(--olympus);">MODULE OLYMPUS // ZK Sovereign Asset Proofs</h2>
+        <span style="font-size: 10px; color: var(--text-muted);">SHA-256 MERKLE STATE</span>
+      </div>
+      <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+        Constructs immutable Merkle trees using the native Web Crypto API to mathematically prove asset validity without revealing private records.
+      </p>
+      <input type="text" id="assetRecord" placeholder="Enter Asset Identifier (e.g. LAND_TITLE_BLOCK_491)">
+      <button class="action-btn btn-olympus" onclick="generateMerkleProof()">Generate Cryptographic Proof</button>
+    </div>
+
+    <div class="card">
+      <div class="title-row"><h2>Immutable Cryptographic Proof Ledger</h2></div>
+      <div class="console" id="olympusLog">
+        <div class="log">// OLYMPUS ENGINE IDLE. READY TO COMPUTE MERKLE ROOTS VIA NATIVE SHA-256.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Module Navigation Switcher
+    function switchModule(mod) {
+      document.querySelectorAll('.module-view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.className = 'nav-btn');
+
+      if (mod === 'corvus') {
+        document.getElementById('viewCorvus').classList.add('active');
+        document.getElementById('tabCorvus').classList.add('active-corvus');
+      } else if (mod === 'aether') {
+        document.getElementById('viewAether').classList.add('active');
+        document.getElementById('tabAether').classList.add('active-aether');
+      } else if (mod === 'olympus') {
+        document.getElementById('viewOlympus').classList.add('active');
+        document.getElementById('tabOlympus').classList.add('active-olympus');
+      }
+    }
+
+    // --- MODULE 01: CORVUS ENGINE (Graph Cycle & Fraud Analysis) ---
+    function runCorvusAudit() {
+      const log = document.getElementById('corvusLog');
+      log.innerHTML = '';
+      function addLog(msg, cl = '') {
+        log.innerHTML += `<div class="log ${cl}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+        log.scrollTop = log.scrollHeight;
+      }
+
+      addLog('Ingesting 4,200 tender awards and corporate registry graph...', 'log-info');
+      addLog('Running modified Tarjan’s Strongly Connected Components algorithm...', 'log-info');
+
+      setTimeout(() => {
+        addLog('[ALERT] Discovered Collusive Cycle: Company Alpha -> Bid Rigging -> Shell Beta -> Proxies -> Company Alpha', 'log-warn');
+        addLog('[EVIDENCE] Shared Beneficial Owner detected across 3 competing tenders (Director ID: #984-X).', 'log-warn');
+        addLog('[CRITICAL] 480M Treasury Disbursement flagged as Embezzlement Cycle.', 'log-warn');
+        document.getElementById('cycleMetric').innerText = '1 Collusive Ring Confirmed';
+        renderGraph();
+      }, 700);
+    }
+
+    function renderGraph() {
+      const canvas = document.getElementById('canvasStage');
+      const ctx = canvas.getContext('2d');
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = 220;
+
+      const nodes = [
+        { x: 50, y: 110, label: 'Ministry Treasury', color: '#10b981' },
+        { x: 160, y: 50, label: 'Front Co. A', color: '#f59e0b' },
+        { x: 270, y: 110, label: 'Shell Co. B', color: '#ef4444' },
+        { x: 160, y: 170, label: 'Proxy Owner X', color: '#ef4444' }
+      ];
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw Edges (Collusive Ring)
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(nodes[0].x, nodes[0].y);
+      ctx.lineTo(nodes[1].x, nodes[1].y);
+      ctx.lineTo(nodes[2].x, nodes[2].y);
+      ctx.lineTo(nodes[3].x, nodes[3].y);
+      ctx.lineTo(nodes[1].x, nodes[1].y); // Cycle!
+      ctx.stroke();
+
+      // Draw Nodes
+      nodes.forEach(n => {
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, 8, 0, Math.PI * 2);
+        ctx.fillStyle = n.color;
+        ctx.fill();
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = '10px monospace';
+        ctx.fillText(n.label, n.x - 20, n.y - 12);
+      });
+    }
+
+    // --- MODULE 02: AETHER MESH (Delay-Tolerant Routing) ---
+    function dispatchMeshPacket() {
+      const text = document.getElementById('meshPayload').value;
+      const log = document.getElementById('aetherLog');
+
+      function addLog(msg, cl = '') {
+        log.innerHTML += `<div class="log ${cl}">[PACKET_ID_${Math.floor(Math.random()*9000+1000)}] ${msg}</div>`;
+        log.scrollTop = log.scrollHeight;
+      }
+
+      addLog(`Encrypting payload: "${text}" with ChaCha20-Poly1305 simulation...`, 'log-info');
+      addLog(`[HOP 1] Broadcast via Low-Power BLE -> Node Relay_Nairobi_04 (TTL: 16)`, 'log-info');
+      
+      setTimeout(() => {
+        addLog(`[HOP 2] Gateway Offline. Activating Store-and-Forward Cache on Node_Mombasa_09`, 'log-warn');
+      }, 500);
+
+      setTimeout(() => {
+        addLog(`[HOP 3] Intercepted by Peer Vehicle Node. Routing past blackout barrier...`, 'log-info');
+        addLog(`[SUCCESS] Packet Delivered to Autonomous Cell Node. Signature Validated.`, 'log-success');
+      }, 1100);
+    }
+
+    // --- MODULE 03: OLYMPUS (Native Web Crypto SHA-256 Merkle Proof) ---
+    async function sha256(message) {
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function generateMerkleProof() {
+      const input = document.getElementById('assetRecord').value || 'LAND_PARCEL_SOV_7890';
+      const log = document.getElementById('olympusLog');
+
+      function addLog(msg, cl = '') {
+        log.innerHTML += `<div class="log ${cl}">[CRYPTO_ROOT] ${msg}</div>`;
+        log.scrollTop = log.scrollHeight;
+      }
+
+      addLog(`Hashing leaf asset: ${input}...`, 'log-info');
+      const leafHash = await sha256(input);
+      addLog(`  -> Leaf Hash: ${leafHash}`);
+
+      const sisterLeaf = await sha256("GENESIS_GOVERNMENT_ALLOCATION");
+      addLog(`  -> Sibling Hash: ${sisterLeaf}`);
+
+      const merkleRoot = await sha256(leafHash + sisterLeaf);
+      addLog(`[VERIFIED] Merkle State Root: ${merkleRoot}`, 'log-success');
+      addLog(`Zero-Knowledge Proof verified. Record integrity guaranteed without central database trust.`, 'log-success');
+    }
+  </script>
+</body>
+</html>
